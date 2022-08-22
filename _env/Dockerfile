@@ -20,7 +20,7 @@ RUN conda install \
     'scikit-learn==1.0.1' \
     'scikit-image==0.18.3' \
     'imagesize==1.3.0' \
-    'flask==2.0.2'
+    'flask==1.1.2'
 
 RUN conda install -c conda-forge \
     'patool==1.12' \
@@ -61,5 +61,6 @@ RUN pip install detectron2 -f \
         https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.8/index.html
 
 
-
+RUN pip install \
+    'torchmetrics==0.6.0'
 

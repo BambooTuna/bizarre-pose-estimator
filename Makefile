@@ -17,18 +17,18 @@ upload:
 .PHONY: run
 run:
 	nvidia-docker run \
-		--rm -it --runtime=nvidia \
-        -v $PWD:$PWD \
-        -w $PWD \
+		--rm --runtime=nvidia \
+        -v $$PWD:$$PWD \
+        -w $$PWD \
         bizarre-pose-estimator \
         bash -c "python3 -m _scripts.pose_estimator_multi ./images ./outputs ./_train/character_pose_estim/runs/feat_concat+data.ckpt"
 
 
 .PHONY: step
 step:
-	setup NAME="$(NAME)"
-	run
-	upload NAME="$(NAME)"
+	make setup NAME="$(NAME)"
+	make run
+	make upload NAME="$(NAME)"
 
 
 .PHONY: build

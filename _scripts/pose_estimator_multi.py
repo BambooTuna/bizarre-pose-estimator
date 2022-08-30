@@ -1,5 +1,8 @@
 import os
 import glob
+import json
+import numpy
+from tqdm import tqdm
 
 from _util.util_v1 import * ; import _util.util_v1 as uutil
 from _util.pytorch_v1 import * ; import _util.pytorch_v1 as utorch
@@ -126,24 +129,48 @@ def _visualize(image=None, bbox=None, keypoints=None):
     return v
 
 
-for path in glob.glob(f'{args.fn_img_dir}/*.jpg'):
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, numpy.integer):
+            return int(obj)
+        elif isinstance(obj, numpy.floating):
+            return float(obj)
+        elif isinstance(obj, numpy.ndarray):
+            return obj.tolist()
+        else:
+            return super(MyEncoder, self).default(obj)
+
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model_pose = model_pose.to(device=device)
+model_segmenter = model_segmenter.to(device=device)
+
+for path in tqdm(glob.glob(f'{args.fn_img_dir}/**/*.jpg')):
     filename = os.path.splitext(os.path.basename(path))[0]
-    img = I(path)
-    ans = infer_pose(model_pose, model_segmenter, [img,])
+    if os.path.exists(f'{args.fn_out_dir}/{filename}.json') is True:
+        continue
+    try:
+        img = I(path)
+        ans = infer_pose(model_pose, model_segmenter, [img,])
 
-    bbox = ans[0]['bbox']
-    print(f'bounding box\n\ttop-left: {bbox[0]}\n\tsize: {bbox[1]}')
-    print()
+        bbox = ans[0]['bbox']
+        print(f'bounding box\n\ttop-left: {bbox[0]}\n\tsize: {bbox[1]}')
+        print()
+        print('keypoints')
+        v = img
+        for k,(x,y) in zip(ukey.coco_keypoints, ans[0]['keypoints']):
+            print((f'\t({x:.2f}, {y:.2f})'), k)
+        print()
 
-    print('keypoints')
-    v = img
-    for k,(x,y) in zip(ukey.coco_keypoints, ans[0]['keypoints']):
-        print((f'\t({x:.2f}, {y:.2f})'), k)
-    print()
-
-    _visualize(img, ans[0]['bbox'], ans[0]['keypoints']).save(f'{args.fn_out_dir}/{filename}.png')
-    print('output saved to ./_samples/character_pose_estim.png')
-
+        # _visualize(img, ans[0]['bbox'], ans[0]['keypoints']).save(f'{args.fn_out_dir}/images/{filename}.png')
+        print(f'ans length is {len(ans)}: output saved to {args.fn_out_dir}/{filename}.png')
+        with open(f'{args.fn_out_dir}/{filename}.json', 'w') as f:
+            json.dump({
+                "bbox": ans[0]['bbox'],
+                "keypoints": ans[0]['keypoints']
+            }, f, ensure_ascii=False, cls=MyEncoder)
+    except Exception as e:
+        print(e)
 
 
 

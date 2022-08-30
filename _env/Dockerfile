@@ -1,8 +1,8 @@
-
-
 FROM pytorch/pytorch:1.8.1-cuda11.1-cudnn8-devel
 ENV NVIDIA_DRIVER_CAPABILITIES all
 
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         software-properties-common curl vim git zip unzip unrar p7zip-full wget cmake \
@@ -63,4 +63,7 @@ RUN pip install detectron2 -f \
 
 RUN pip install \
     'torchmetrics==0.6.0'
+
+
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && apt-get install google-cloud-cli -y
 
